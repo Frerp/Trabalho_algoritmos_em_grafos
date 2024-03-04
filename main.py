@@ -1,99 +1,80 @@
 import pygame
 import sys
+import random
+from characters.character import Character, Enemy
+from gui.buttons import Button  # Adicionado import para a classe Button
+from utils.graph_data import load_graph_data, load_coordinates_data
+from events.events import handle_event, generate_random_event
 
 pygame.init()
 
 WIDTH, HEIGHT = 1200, 600
+MENU_WIDTH = 400  # Largura do menu
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ilha dos Perigos")
 
 clock = pygame.time.Clock()
 
-background_image = pygame.image.load('mapa_ilha10.jpeg')
+background_image = pygame.image.load('Assets/mapa_ilha10.jpeg')
 background_image = pygame.transform.scale(background_image, (800, HEIGHT))
 
-# Coordenadas dos vértices
-vertices_pos = []
-vertices_grid = "coordenadas_vertices.txt"
+vertices_pos = load_coordinates_data("coordenadas_vertices.txt")
+lista_adjacencias = load_graph_data("grafo.txt")
 
-with open(vertices_grid, "r") as arquivo:
-    for linha in arquivo:
-        tripla = linha.split()
-        coord_x = int(tripla[1])
-        coord_y = int(tripla[2])
-        vertices_pos.append((coord_x, coord_y))
+eventos_por_vertice = {i + 1: generate_random_event() for i in range(len(vertices_pos))}
 
-# Lista de adjacências
-lista_adjacencias = {
-1: [2, 3],
-2: [1, 9, 10, 3],
-3: [1, 4, 6, 2],
-4: [3, 6, 7],
-5: [8, 14],
-6: [3, 10, 4, 15],
-7: [4, 11, 12],
-8: [9, 5, 14],
-9: [8, 2, 10],
-10: [2, 9, 15, 6],
-11: [16, 7],
-12: [13, 22, 16, 17, 7],
-13: [17, 12],
-14: [8, 18, 5, 19],
-15: [6, 10, 21],
-16: [21, 11, 12, 22],
-17: [13, 22, 12],
-18: [23, 14],
-19: [25, 14],
-20: [30],
-21: [15, 16, 27],
-22: [28, 12, 16, 17, 27],
-23: [18, 24, 29],
-24: [23, 25],
-25: [30, 24, 19],
-26: [30],
-27: [21, 22, 28],
-28: [22, 27, 32, 34],
-29: [23, 38],
-30: [20, 25, 26, 35, 40],
-31: [32, 36, 37],
-32: [28, 37, 33, 31],
-33: [37, 34, 32],
-34: [33, 28],
-35: [30, 38, 39],
-36: [31, 40, 41],
-37: [46, 43, 33, 32, 31],
-38: [29, 35],
-39: [40, 35],
-40: [36, 39, 41, 30],
-41: [42, 43, 40, 36],
-42: [41],
-43: [37, 41, 44, 45],
-44: [43, 45],
-45: [43, 44],
-46: [37,],
-}
+initial_vertex = vertices_pos[0]
+player = Character('Assets/frerp.png', initial_vertex, health=100, attack=20)
+player.enemies = [   Enemy('Pantera Mítica', health=50, attack=15, image_path='Assets/pantera.jpeg'),
+                     Enemy('Leão de Nemeia', health=70, attack=20, image_path='Assets/leao.jpeg'),
+                     Enemy('Cobra Gigante', health=40, attack=25, image_path='Assets/cobra.jpeg'),
+                     Enemy('Formigas Quimeras', health=60, attack=18,image_path='Assets/formiga.jpeg')]
 
-font = pygame.font.Font(None, 36)
-
+menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
+menu_surface.fill((50, 50, 50))
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            current_vertex = player.current_vertex
+            current_vertex_id = vertices_pos.index(current_vertex) + 1
+            target_vertex = random.choice(lista_adjacencias[current_vertex_id])
+
+            event_type = eventos_por_vertice.get(target_vertex, None)
+
+            if event_type:
+                event_description = handle_event(event_type)
+                print(event_description)
+
+                if 'inimigo' in event_type:
+                    player.handle_event(event_type, screen)
+                    player.move_to_vertex(vertices_pos[target_vertex - 1])
+                elif 'cura' in event_type or 'arma' in event_type:
+                    player.handle_event(event_type, screen)
+                    player.move_to_vertex(vertices_pos[target_vertex - 1])
+                elif 'deslizamento_pedra' in event_type or 'areia_movedica' in event_type or 'rio_traicoeiro' in event_type:
+                    damage = random.randint(1, 10)
+                    print(f"Você sofreu {damage} de dano devido ao evento.")
+                    player.take_damage(damage)
+                    print(f"Sua vida atual: {player.health}")
+                    player.move_to_vertex(vertices_pos[target_vertex - 1])
+
 
     screen.fill((0, 0, 0))
     screen.blit(background_image, (0, 0))
+    screen.blit(player.image, player.rect.topleft)
 
-    # Desenha as linhas entre os vértices adjacentes
-    for vertice, adjacentes in lista_adjacencias.items():
-        for adjacente in adjacentes:
-            pygame.draw.line(screen, (255, 0, 0), vertices_pos[vertice - 1], vertices_pos[adjacente - 1], 2)
+    font = pygame.font.Font(None, 26)
+    health_text = font.render(f"Vida: {player.health}", True, (255, 255, 255))
+    attack_text = font.render(f"Ataque: {player.attack}", True, (255, 255, 255))
 
-    # Desenha os vértices e seus números
-    for vertice, pos in enumerate(vertices_pos, start=1):
-        pygame.draw.circle(screen, (0, 255, 0), pos, 10)
-        text = font.render(str(vertice), True, (255, 255, 255))
-        screen.blit(text, (pos[0] + 12, pos[1]))
+    screen.blit(health_text, (920, 500))
+    screen.blit(attack_text, (920, 530))
+    player_icon = pygame.image.load('Assets/frerp.png')
+    player_icon = pygame.transform.scale(player_icon, (190, 190))
+    screen.blit(player_icon, (750, 440))
 
     pygame.display.flip()
     clock.tick(30)
