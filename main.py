@@ -1,10 +1,12 @@
 import pygame
 import sys
 import random
+from collections import deque
 from characters.character import Character, Enemy
 from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
 from events.events import handle_event, generate_random_event
+from events.generate_path import generate_path
 
 pygame.init()
 
@@ -20,10 +22,15 @@ background_image = pygame.transform.scale(background_image, (800, HEIGHT))
 
 vertices_pos = load_coordinates_data("coordenadas_vertices.txt")
 lista_adjacencias = load_graph_data("grafo.txt")
+#print("vertices_pos: ", vertices_pos)
+
+index_initial_vertex, caminho_gerado = generate_path(lista_adjacencias)
+#print("index_initial_vertex: ", index_initial_vertex)
+#print("Caminho gerado: ", caminho_gerado)
 
 eventos_por_vertice = {i + 1: generate_random_event() for i in range(len(vertices_pos))}
 
-initial_vertex = vertices_pos[0]
+initial_vertex = vertices_pos[index_initial_vertex - 1]
 player = Character('Assets/frerp.png', initial_vertex, health=100, attack=20)
 player.enemies = [   Enemy('Pantera Mítica', health=50, attack=15, image_path='Assets/pantera.jpeg'),
                      Enemy('Leão de Nemeia', health=70, attack=20, image_path='Assets/leao.jpeg'),
@@ -48,6 +55,7 @@ while running:
                 event_description = handle_event(event_type)
                 print(event_description)
 
+
                 if 'inimigo' in event_type:
                     player.handle_event(event_type, screen)
                     player.move_to_vertex(vertices_pos[target_vertex - 1])
@@ -65,6 +73,27 @@ while running:
     screen.fill((0, 0, 0))
     screen.blit(background_image, (0, 0))
     screen.blit(player.image, player.rect.topleft)
+
+
+    #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO
+    for vertice, adjacentes in lista_adjacencias.items():
+        for adjacente in adjacentes:
+            pygame.draw.line(screen, (0, 0, 255), vertices_pos[vertice - 1], vertices_pos[adjacente - 1], 2)
+    
+    fonte = pygame.font.Font(None, 26)
+    for coordenada in vertices_pos:
+        indice_vertice = fonte.render(f"{vertices_pos.index(coordenada) + 1}", True, (255, 255, 255))
+        pygame.draw.circle(screen, (0, 0, 255), coordenada, 10)
+        screen.blit(indice_vertice, (coordenada[0] + 10, coordenada[1] - 5))
+
+    for par_adajacentes in caminho_gerado:
+        x = par_adajacentes[0]
+        y = par_adajacentes[1]
+        pygame.draw.line(screen, (0, 255, 0), vertices_pos[x - 1], vertices_pos[y - 1], 2)
+        pygame.draw.circle(screen, (0, 255, 0), vertices_pos[x - 1], 10)
+        pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)
+    #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
+
 
     font = pygame.font.Font(None, 26)
     health_text = font.render(f"Vida: {player.health}", True, (255, 255, 255))
