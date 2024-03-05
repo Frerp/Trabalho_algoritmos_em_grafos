@@ -15,13 +15,7 @@ def generate_path(grafo):
         
         for adjacente in grafo[atual]:
             if atual == vertice_destino:
-                caminho_retornado = []
-                tamanho_caminho = len(caminho)
-
-                for index in range(tamanho_caminho - 1):
-                    caminho_retornado.append((caminho[index], caminho[index + 1]))
-
-                return vertice_inicial, caminho_retornado
+                return vertice_inicial, caminho
             
             if adjacente not in caminho:
                 queue.append((adjacente, caminho + [adjacente]))

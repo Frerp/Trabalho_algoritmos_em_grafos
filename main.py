@@ -1,7 +1,6 @@
 import pygame
 import sys
 import random
-from collections import deque
 from characters.character import Character, Enemy
 from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
@@ -45,9 +44,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO
             current_vertex = player.current_vertex
-            current_vertex_id = vertices_pos.index(current_vertex) + 1
-            target_vertex = random.choice(lista_adjacencias[current_vertex_id])
+            current_vertex_id_vertices_pos = vertices_pos.index(current_vertex) + 1
+
+            current_vertex_id_caminho_gerado = caminho_gerado.index(current_vertex_id_vertices_pos)
+            target_vertex_id_caminho_gerado = current_vertex_id_caminho_gerado + 1
+            target_vertex = caminho_gerado[target_vertex_id_caminho_gerado]
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO
 
             event_type = eventos_por_vertice.get(target_vertex, None)
 
@@ -86,9 +91,10 @@ while running:
         pygame.draw.circle(screen, (0, 0, 255), coordenada, 10)
         screen.blit(indice_vertice, (coordenada[0] + 10, coordenada[1] - 5))
 
-    for par_adajacentes in caminho_gerado:
-        x = par_adajacentes[0]
-        y = par_adajacentes[1]
+    tamanho_caminho = len(caminho_gerado)
+    for index in range(tamanho_caminho - 1):
+        x = caminho_gerado[index]
+        y = caminho_gerado[index + 1]
         pygame.draw.line(screen, (0, 255, 0), vertices_pos[x - 1], vertices_pos[y - 1], 2)
         pygame.draw.circle(screen, (0, 255, 0), vertices_pos[x - 1], 10)
         pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)
