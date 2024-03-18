@@ -5,8 +5,11 @@ def load_graph_data(file_path):
             vertice_id, adjacentes_str = linha.split(":")
             vertice_id = int(vertice_id.strip())
             adjacentes = [int(i.strip()) for i in adjacentes_str.strip()[1:-1].split(',')]
-            lista_adjacencias[vertice_id] = adjacentes
+            marca = "branco"
+            qtd_visitados = 0
+            lista_adjacencias[vertice_id] = [marca, qtd_visitados, adjacentes]
     return lista_adjacencias
+
 def load_coordinates_data(file_path):
     with open(file_path, "r") as arquivo:
         vertices_pos = []

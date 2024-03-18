@@ -13,6 +13,8 @@ def handle_event(event_type):
         return 'Você encontrou areia movediça!'
     elif event_type == 'rio_traicoeiro':
         return 'Você encontrou um rio traiçoeiro!'
+    elif event_type == 'checkpoint':
+        return 'Você encontrou um checkpoint!'
     else:
         return 'Evento desconhecido!'
 

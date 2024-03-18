@@ -148,6 +148,28 @@ class Character:
                     print("Você deixou a arma para trás.")
                 return
 
+    def handle_checkpoint_event(self, screen):
+        print("Você chegou a um checkpoint!")
+
+        buttons = [Button("OK!", (920, 200), (300, 50))]
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            self.render_buttons(screen, buttons)
+            pygame.display.flip()
+            clock.tick(30)
+
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_click = pygame.mouse.get_pressed()
+
+            choice = self.check_button_click(buttons, mouse_pos, mouse_click)
+            if choice:
+                return        
+
     def handle_event(self, event_type, screen):
         if event_type == 'inimigo':
             enemy = random.choice(self.enemies)
@@ -156,6 +178,8 @@ class Character:
             self.handle_healing_event(screen)
         elif event_type == 'arma':
             self.handle_weapon_event(screen)
+        elif event_type == 'checkpoint':
+            self.handle_checkpoint_event(screen)
 
     def render_buttons(self, screen, buttons):
         for button in buttons:
