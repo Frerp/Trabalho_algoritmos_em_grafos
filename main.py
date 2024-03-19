@@ -9,7 +9,7 @@ from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
 from events.events import generate_random_event
 from events.generate_path import generate_path
-from determina_prox_vertice import determina_proximo_vertice
+from determina_prox_vertice import determina_proximo_vertice 
 
 pygame.init()
 
@@ -45,7 +45,8 @@ caminho_gerado = generate_path(lista_adjacencias, index_vertice_inicial, index_v
 
 
 #INICIALIZANDO PROGRESSO DO JOGO
-progresso = []
+progresso_pilha = []
+progresso_lista_adjacencias = {}
 ultimo_checkpoint = 0
 #INICIALIZANDO PROGRESSO DO JOG
 
@@ -103,10 +104,11 @@ while running:
             print("lista de vizinhos vertice atual (atualização): ", lista_adjacencias[id_vertice_atual][2])
             print("proximo vertice: ", target_vertex)
             print("pilha: ", pilha)
-            print("progresso: ", progresso)
+            print("progresso_pilha: ", progresso_pilha)
             if (target_vertex == -1):
                 running = False
             #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
+
 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
             event_object_type = eventos_por_vertice.get(id_vertice_atual, None)
@@ -129,19 +131,18 @@ while running:
                     print(f"Sua vida atual: {player.health}")
 
                 elif 'checkpoint' in event_object_type.type:
+                    print('Eu entrei no checkpoint')
                     ultimo_checkpoint = id_vertice_atual
-                    print("Progresso: ", progresso)
-                    progresso = copy.deepcopy(pilha)
-                    print("Progresso: ", progresso)
-                    #eventos_por_vertice[id_vertice_atual] = None
+                    progresso_pilha = copy.deepcopy(pilha)
+                    progresso_lista_adjacencias = copy.deepcopy(lista_adjacencias)
+                    eventos_por_vertice[id_vertice_atual] = None
                     player.handle_event(event_object_type, screen)
                     del event_object_type
 
             if (player.health <= 0):
                 if ultimo_checkpoint > 0:
-                    pilha = progresso
-                    print("ultimo checkpoint: ", ultimo_checkpoint)
-                    print("progresso até agora: ", progresso) 
+                    pilha = copy.deepcopy(progresso_pilha)
+                    lista_adjacencias = copy.deepcopy(progresso_lista_adjacencias)
                     target_vertex = ultimo_checkpoint
                     ultimo_checkpoint = 0
                     player.health = 100
@@ -149,7 +150,6 @@ while running:
                     print("Tu morreu mash, tu morreu")
                     pygame.quit()
                     sys.exit()
-                    
 
             player.move_to_vertex(vertices_pos[target_vertex - 1])
             

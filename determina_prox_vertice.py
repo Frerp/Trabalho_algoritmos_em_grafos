@@ -20,7 +20,6 @@ def determina_proximo_vertice(grafo_global, vertice_atual_global, pilha_global):
             proximo_vertice = grafo[vertice_atual][2][-1]
 
         if (grafo[proximo_vertice][0] == "branco"):
-            #grafo[proximo_vertice][0] = "cinza"
             index_proximo_vertice = grafo[vertice_atual][2].index(proximo_vertice)
             grafo[vertice_atual][2][index_proximo_vertice] = grafo[vertice_atual][2][qtd_visitados]
             grafo[vertice_atual][2][qtd_visitados] = proximo_vertice
