@@ -1,10 +1,13 @@
 import pygame
 import sys
 import random
-from characters.character import Character, Enemy
+import copy
+from characters.character import Character
+from characters.enemy import Enemy
+from characters.checkpoint import Checkpoint
 from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
-from events.events import handle_event, generate_random_event
+from events.events import generate_random_event
 from events.generate_path import generate_path
 from determina_prox_vertice import determina_proximo_vertice
 
@@ -43,25 +46,36 @@ caminho_gerado = generate_path(lista_adjacencias, index_vertice_inicial, index_v
 
 #INICIALIZANDO PROGRESSO DO JOGO
 progresso = []
+ultimo_checkpoint = 0
 #INICIALIZANDO PROGRESSO DO JOG
+
 
 eventos_por_vertice = {}
 for i in range(len(vertices_pos)):
     if (i + 1) not in vertices_checkpoints:
-        eventos_por_vertice[i + 1] = generate_random_event()
+        evento_objeto = generate_random_event()
+        eventos_por_vertice[i + 1] = evento_objeto
     else:
-        eventos_por_vertice[i + 1] = 'checkpoint'
+        eventos_por_vertice[i + 1] = Checkpoint('checkpoint')
 
 vertice_inicial = vertices_pos[index_vertice_inicial  - 1]
 player = Character('Assets/frerp.png', vertice_inicial, health=100, attack=20)
-player.enemies = [   Enemy('Pantera Mítica', health=50, attack=15, image_path='Assets/pantera.jpeg'),
-                     Enemy('Leão de Nemeia', health=70, attack=20, image_path='Assets/leao.jpeg'),
-                     Enemy('Cobra Gigante', health=40, attack=25, image_path='Assets/cobra.jpeg'),
-                     Enemy('Formigas Quimeras', health=60, attack=18,image_path='Assets/formiga.jpeg')]
 
 menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
 menu_surface.fill((50, 50, 50))
 running = True
+
+menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
+menu_surface.fill((50, 50, 50))
+running = True
+def draw_health_bar(surface, x, y, width, height, health, max_health):
+    bar_length = 200
+    fill = (health / max_health) * bar_length
+    outline_rect = pygame.Rect(x, y, bar_length, height)
+    fill_rect = pygame.Rect(x, y, fill, height)
+    pygame.draw.rect(surface, (255, 0, 0), fill_rect)
+    pygame.draw.rect(surface, (0, 0, 0), outline_rect,2)
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -89,35 +103,53 @@ while running:
             print("lista de vizinhos vertice atual (atualização): ", lista_adjacencias[id_vertice_atual][2])
             print("proximo vertice: ", target_vertex)
             print("pilha: ", pilha)
+            print("progresso: ", progresso)
             if (target_vertex == -1):
                 running = False
             #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
-            event_type = eventos_por_vertice.get(id_vertice_atual, None)
+            event_object_type = eventos_por_vertice.get(id_vertice_atual, None)
 
-            if event_type:
-                event_description = (event_type)
+            if event_object_type:
+                event_description = (event_object_type.type)
                 print(event_description)
 
+                if 'inimigo' in event_object_type.type:
+                    resposta = player.handle_event(event_object_type, screen)
+                    if resposta == 'inimigo morreu':
+                        eventos_por_vertice[id_vertice_atual] = None
+                elif 'cura' in event_object_type.type or 'arma' in event_object_type.type:
+                    player.handle_event(event_object_type, screen)
 
-                if 'inimigo' in event_type:
-                    #player.handle_event(event_type, screen)
-                    pass
-                elif 'cura' in event_type or 'arma' in event_type:
-                    #player.handle_event(event_type, screen)
-                    pass
-                elif 'deslizamento_pedra' in event_type or 'areia_movedica' in event_type or 'rio_traicoeiro' in event_type:
-                    damage = random.randint(1, 10)
+                elif 'terreno' in event_object_type.type:
+                    damage = event_object_type.damage
                     print(f"Você sofreu {damage} de dano devido ao evento.")
                     player.take_damage(damage)
                     print(f"Sua vida atual: {player.health}")
-                    
-                elif 'checkpoint' in event_type:
+
+                elif 'checkpoint' in event_object_type.type:
                     ultimo_checkpoint = id_vertice_atual
-                    progresso = pilha
-                    eventos_por_vertice[id_vertice_atual] = None
-                    player.handle_event(event_type, screen)
+                    print("Progresso: ", progresso)
+                    progresso = copy.deepcopy(pilha)
+                    print("Progresso: ", progresso)
+                    #eventos_por_vertice[id_vertice_atual] = None
+                    player.handle_event(event_object_type, screen)
+                    del event_object_type
+
+            if (player.health <= 0):
+                if ultimo_checkpoint > 0:
+                    pilha = progresso
+                    print("ultimo checkpoint: ", ultimo_checkpoint)
+                    print("progresso até agora: ", progresso) 
+                    target_vertex = ultimo_checkpoint
+                    ultimo_checkpoint = 0
+                    player.health = 100
+                else:
+                    print("Tu morreu mash, tu morreu")
+                    pygame.quit()
+                    sys.exit()
+                    
 
             player.move_to_vertex(vertices_pos[target_vertex - 1])
             
@@ -160,16 +192,20 @@ while running:
         pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)'''
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
 
+    menu_icon = pygame.image.load('Assets/menu_lateral.jpg')
+    menu_icon = pygame.transform.scale(menu_icon, (400, 600))
+    screen.blit(menu_icon, (800,0))
 
     font = pygame.font.Font(None, 26)
-    health_text = font.render(f"Vida: {player.health}", True, (255, 255, 255))
-    attack_text = font.render(f"Ataque: {player.attack}", True, (255, 255, 255))
+    draw_health_bar(screen, 840, 400, 200, 20, player.health, 100)
+    health_text = font.render(f"Vida: {player.health}", True, (0, 0, 0))
+    attack_text = font.render(f"Ataque: {player.attack}", True, (0, 0, 0))
 
-    screen.blit(health_text, (920, 500))
-    screen.blit(attack_text, (920, 530))
+    screen.blit(health_text, (840, 402))
+    screen.blit(attack_text, (980, 530))
     player_icon = pygame.image.load('Assets/frerp.png')
     player_icon = pygame.transform.scale(player_icon, (190, 190))
-    screen.blit(player_icon, (750, 440))
+    screen.blit(player_icon,(800,400))
 
     pygame.display.flip()
     clock.tick(30)
