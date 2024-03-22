@@ -1,7 +1,15 @@
 import random
 from collections import deque
 
-def generate_path(grafo, vertice_inicial, vertice_destino):
+class Map:
+    def __init__(self, type, graph, treasurepoint):
+        self.type = type
+        self.treasurepoint = treasurepoint
+        self.graph = graph
+
+    def generate_path(self, vertice_inicial):
+        grafo = self.graph
+        vertice_destino = self.treasurepoint
         
         queue = deque([(vertice_inicial, [vertice_inicial])])
         

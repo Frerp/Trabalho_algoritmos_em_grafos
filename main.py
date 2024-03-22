@@ -7,7 +7,7 @@ from characters.enemy import Enemy
 from characters.checkpoint import Checkpoint
 from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
-from events.events import generate_random_event
+from events.events import generate_random_event, generate_events
 from events.generate_path import generate_path
 from determina_prox_vertice import determina_proximo_vertice 
 
@@ -52,15 +52,19 @@ ultimo_checkpoint = 0
 
 
 eventos_por_vertice = {}
+eventos_por_vertice = generate_events(lista_adjacencias, vertices_inicio, vertices_checkpoints, vertices_tesouro)
+'''
 for i in range(len(vertices_pos)):
     if (i + 1) not in vertices_checkpoints:
         evento_objeto = generate_random_event()
         eventos_por_vertice[i + 1] = evento_objeto
     else:
         eventos_por_vertice[i + 1] = Checkpoint('checkpoint')
+'''
 
-vertice_inicial = vertices_pos[index_vertice_inicial  - 1]
-player = Character('Assets/frerp.png', vertice_inicial, health=100, attack=20)
+vertice_inicial = vertices_pos[index_vertice_inicial  - 1] 
+player = Character('Assets/frerp.png', vertice_inicial, index_vertice_inicial, health=100, attack=20)
+
 
 menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
 menu_surface.fill((50, 50, 50))
@@ -77,6 +81,8 @@ def draw_health_bar(surface, x, y, width, height, health, max_health):
     pygame.draw.rect(surface, (255, 0, 0), fill_rect)
     pygame.draw.rect(surface, (0, 0, 0), outline_rect,2)
 
+calculo_proximo_vertice = 1
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -87,27 +93,8 @@ while running:
             #DETERMINA ID DO VÉRTICE ATUAL
             vertice_atual = player.current_vertex
             id_vertice_atual = vertices_pos.index(vertice_atual) + 1
-            #DETERMINA ID DO VÉRTICE ATUAL
-
-
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
-            print("\nCABEÇALHO............................................")
             print("vertice atual: ", id_vertice_atual)
-            print("cor vertice atual: ", lista_adjacencias[id_vertice_atual][0])
-            print("qtd visitados vertice atual: ", lista_adjacencias[id_vertice_atual][1])
-            print("lista de vizinhos vertice atual: ", lista_adjacencias[id_vertice_atual][2])
-            lista_adjacencias, proximo_vertice, pilha = determina_proximo_vertice(lista_adjacencias, id_vertice_atual, pilha)
-            target_vertex = proximo_vertice
-            print("vertice atual (atualização): ", id_vertice_atual)
-            print("cor vertice atual (atualização): ", lista_adjacencias[id_vertice_atual][0])
-            print("qtd visitados vertice atual (atualização): ", lista_adjacencias[id_vertice_atual][1])
-            print("lista de vizinhos vertice atual (atualização): ", lista_adjacencias[id_vertice_atual][2])
-            print("proximo vertice: ", target_vertex)
-            print("pilha: ", pilha)
-            print("progresso_pilha: ", progresso_pilha)
-            if (target_vertex == -1):
-                running = False
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
+            #DETERMINA ID DO VÉRTICE ATUAL
 
 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
@@ -121,14 +108,21 @@ while running:
                     resposta = player.handle_event(event_object_type, screen)
                     if resposta == 'inimigo morreu':
                         eventos_por_vertice[id_vertice_atual] = None
+
                 elif 'cura' in event_object_type.type or 'arma' in event_object_type.type:
                     player.handle_event(event_object_type, screen)
-
+  
                 elif 'terreno' in event_object_type.type:
                     damage = event_object_type.damage
                     print(f"Você sofreu {damage} de dano devido ao evento.")
                     player.take_damage(damage)
                     print(f"Sua vida atual: {player.health}")
+
+                elif 'map' in event_object_type.type:
+                    pass
+                    #resposta = player.handle_event(event_object_type, screen)
+                    #if isinstance(resposta, list):
+                    #    calculo_proximo_vertice = 2
 
                 elif 'checkpoint' in event_object_type.type:
                     print('Eu entrei no checkpoint')
@@ -138,7 +132,34 @@ while running:
                     eventos_por_vertice[id_vertice_atual] = None
                     player.handle_event(event_object_type, screen)
                     del event_object_type
+            #LIDANDO COM EVENTO DO VÉRTICE ATUAL
+                    
 
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
+            print("\nCABEÇALHO............................................")
+            print("vertice atual: ", id_vertice_atual)
+            print("cor vertice atual: ", lista_adjacencias[id_vertice_atual][0])
+            print("pilha: ", pilha)
+            print("progresso_pilha: ", progresso_pilha)
+            lista_adjacencias, proximo_vertice, pilha = determina_proximo_vertice(lista_adjacencias, id_vertice_atual, pilha)
+            target_vertex = proximo_vertice
+
+            if (target_vertex == -1):
+                running = False
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
+
+
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
+            '''current_vertex = player.current_vertex
+            current_vertex_id_vertices_pos = vertices_pos.index(current_vertex) + 1
+
+            current_vertex_id_caminho_gerado = caminho_gerado.index(current_vertex_id_vertices_pos)
+            target_vertex_id_caminho_gerado = current_vertex_id_caminho_gerado + 1
+            target_vertex = caminho_gerado[target_vertex_id_caminho_gerado]'''
+            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
+
+
+            #VERIFICANDO SE PLAYER MORREU E SE TEM CHECKPOINT
             if (player.health <= 0):
                 if ultimo_checkpoint > 0:
                     pilha = copy.deepcopy(progresso_pilha)
@@ -151,21 +172,9 @@ while running:
                     pygame.quit()
                     sys.exit()
 
-            player.move_to_vertex(vertices_pos[target_vertex - 1])
+            player.move_to_vertex(vertices_pos[target_vertex - 1], target_vertex)
+            #VERIFICANDO SE PLAYER MORREU E SE TEM CHECKPOINT
             
-            #DEPOIS QUE ELE PERDER VIDA, ELE VERIFICA SE USA CHECKPOINT
-            #LIDANDO COM EVENTO DO VÉRTICE ATUAL
-
-
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
-            '''current_vertex = player.current_vertex
-            current_vertex_id_vertices_pos = vertices_pos.index(current_vertex) + 1
-
-            current_vertex_id_caminho_gerado = caminho_gerado.index(current_vertex_id_vertices_pos)
-            target_vertex_id_caminho_gerado = current_vertex_id_caminho_gerado + 1
-            target_vertex = caminho_gerado[target_vertex_id_caminho_gerado]'''
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
-
 
     screen.fill((0, 0, 0))
     screen.blit(background_image, (0, 0))
@@ -179,10 +188,18 @@ while running:
     
     fonte = pygame.font.Font(None, 26)
     for coordenada in vertices_pos:
+        vertice_index = vertices_pos.index(coordenada) + 1
         indice_vertice = fonte.render(f"{vertices_pos.index(coordenada) + 1}", True, (255, 255, 255))
-        pygame.draw.circle(screen, (0, 0, 255), coordenada, 10)
+        if lista_adjacencias[vertice_index][0] == 'branco':
+            color = (255, 255, 255)
+        elif lista_adjacencias[vertice_index][0] == 'cinza':
+            color = (100, 100, 100)
+        elif lista_adjacencias[vertice_index][0] == 'preto':
+            color = (0, 0, 0)
+        pygame.draw.circle(screen, color, coordenada, 10)
         screen.blit(indice_vertice, (coordenada[0] + 10, coordenada[1] - 5))
     
+    #GENERATE PATH
     '''tamanho_caminho = len(caminho_gerado)
     for index in range(tamanho_caminho - 1):
         x = caminho_gerado[index]
@@ -190,6 +207,7 @@ while running:
         pygame.draw.line(screen, (0, 255, 0), vertices_pos[x - 1], vertices_pos[y - 1], 2)
         pygame.draw.circle(screen, (0, 255, 0), vertices_pos[x - 1], 10)
         pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)'''
+    #GENERATE PATH
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
 
     menu_icon = pygame.image.load('Assets/menu_lateral.jpg')
