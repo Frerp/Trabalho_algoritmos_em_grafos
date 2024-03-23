@@ -86,7 +86,7 @@ def generate_events(graph, beachpoints, checkpoints, treasurepoints):
             attack = 20
             health = 65
         elif (nomeInimigo == 'Ze Jacare'):
-            image_path = 'Assets/Ze_Jacare.png'
+            image_path = 'Assets/Crocodilo_gigante.png'
             attack = 8
             health = 80
         objeto = Enemy('inimigo', nomeInimigo, attack, health, image_path)

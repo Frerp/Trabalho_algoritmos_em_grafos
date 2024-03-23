@@ -8,8 +8,7 @@ from characters.enemy import Enemy
 from characters.checkpoint import Checkpoint
 from gui.buttons import Button  # Adicionado import para a classe Button
 from utils.graph_data import load_graph_data, load_coordinates_data
-from events.events import generate_random_event, generate_events
-from events.generate_path import generate_path
+from events.events import generate_events
 from determina_prox_vertice import determina_proximo_vertice 
 
 pygame.init()
@@ -42,32 +41,27 @@ vertices_checkpoints = [19, 28, 36]
 #INICIALIZANOD PILHA E CAMINHO GERADO COM BUSCA EM LARGURA
 pilha = []
 caminho_do_mapa = []
-caminho_gerado = generate_path(lista_adjacencias, index_vertice_inicial, index_vertice_destino)
 #INICIALIZANOD PILHA E CAMINHO GERADO COM BUSCA EM LARGURA
 
 
 #INICIALIZANDO PROGRESSO DO JOGO
+hora = 0
 progresso_pilha = []
 progresso_lista_adjacencias = {}
+progresso_tesouro = 0
 ultimo_checkpoint = 0
 #INICIALIZANDO PROGRESSO DO JOG
 
 
 #TESOURO
 mochila = {}
+qtd_tesouro = 0
 #TESOURO
 
 
 eventos_por_vertice = {}
 eventos_por_vertice = generate_events(lista_adjacencias, vertices_inicio, vertices_checkpoints, vertices_tesouro)
-'''
-for i in range(len(vertices_pos)):
-    if (i + 1) not in vertices_checkpoints:
-        evento_objeto = generate_random_event()
-        eventos_por_vertice[i + 1] = evento_objeto
-    else:
-        eventos_por_vertice[i + 1] = Checkpoint('checkpoint')
-'''
+
 
 vertice_inicial = vertices_pos[index_vertice_inicial  - 1] 
 player = Character('Assets/frerp.png', vertice_inicial, index_vertice_inicial, health=100, attack=20)
@@ -77,15 +71,20 @@ menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
 menu_surface.fill((50, 50, 50))
 running = True
 
-menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
-menu_surface.fill((50, 50, 50))
-running = True
 def draw_health_bar(surface, x, y, width, height, health, max_health):
     bar_length = 200
     fill = (health / max_health) * bar_length
     outline_rect = pygame.Rect(x, y, bar_length, height)
     fill_rect = pygame.Rect(x, y, fill, height)
     pygame.draw.rect(surface, (255, 0, 0), fill_rect)
+    pygame.draw.rect(surface, (0, 0, 0), outline_rect,2)
+
+def draw_treasure_bar(surface, x, y, width, height, treasure_points, max_treasure_points):
+    bar_length = 200
+    fill = (treasure_points / max_treasure_points) * bar_length
+    outline_rect = pygame.Rect(x, y, bar_length, height)
+    fill_rect = pygame.Rect(x, y, fill, height)
+    pygame.draw.rect(surface, (255, 255, 0), fill_rect)
     pygame.draw.rect(surface, (0, 0, 0), outline_rect,2)
 
 calculo_proximo_vertice = 1
@@ -96,6 +95,11 @@ while running:
         #DETERMINA ID DO VÉRTICE ATUAL
         vertice_atual = player.current_vertex
         id_vertice_atual = vertices_pos.index(vertice_atual) + 1
+
+        if (id_vertice_atual == index_vertice_inicial) and ('tesouro' in mochila):
+            print("VOCÊ GANHOU O JOGO CARAA! QUE LINDO CARAA! QUE LINDOUO!!")
+            running = False
+
         
         if event.type == pygame.QUIT:
             running = False
@@ -108,6 +112,8 @@ while running:
             
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
+            hora += 1
+            player.time = hora 
             print("vertice atual: ", id_vertice_atual)
 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
@@ -135,17 +141,21 @@ while running:
                     print(f"Sua vida atual: {player.health}")
 
                 elif 'mapa' in event_object_type.type:
-                    mochila['mapa'] = event_object_type 
+                    resposta = player.handle_event(event_object_type, screen)
 
-                    if 'tesouro' in mochila:
-                        mochila['mapa'].destiny = index_vertice_inicial
+                    if resposta == 'Peguei o mapa':
+                        mochila['mapa'] = event_object_type 
+                        if 'tesouro' in mochila:
+                            if mochila['tesouro'].treasure_amount > 0:
+                                mochila['mapa'].destiny = index_vertice_inicial
 
-                    map = mochila['mapa']
-
-                    caminho_do_mapa = player.handle_event(map, screen)
-                    eventos_por_vertice[id_vertice_atual] = None
-                    if len(caminho_do_mapa) > 0:
-                        calculo_proximo_vertice = 2
+                        map = mochila['mapa']
+                        caminho_do_mapa = map.generate_path(id_vertice_atual)
+                        eventos_por_vertice[id_vertice_atual] = None
+                        if len(caminho_do_mapa) > 0:
+                            calculo_proximo_vertice = 2
+                    elif resposta == 'Deixei o mapa':
+                        pass
 
                 elif 'checkpoint' in event_object_type.type:
                     print('Eu entrei no checkpoint')
@@ -155,9 +165,11 @@ while running:
                     eventos_por_vertice[id_vertice_atual] = None
                     player.handle_event(event_object_type, screen)
                     del event_object_type
+                    if 'tesouro' in mochila:
+                        progresso_tesouro = mochila['tesouro'].treasure_amount
 
                 elif 'tesouro' in event_object_type.type:
-                    tesouro = event_object_type
+                    tesouro = player.handle_event(event_object_type, screen)
                     mochila['tesouro'] = tesouro
                     
                     if 'mapa' in mochila:
@@ -165,11 +177,24 @@ while running:
                         caminho_do_mapa = mochila['mapa'].generate_path(id_vertice_atual) 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
                     
+            if 'tesouro' in mochila:
+                qtd_tesouro = mochila['tesouro'].treasure_amount
+                if player.health - (player.attack - 20) <= qtd_tesouro: 
+                    qtd_tesouro = player.health - (player.attack - 20)
+
+                if qtd_tesouro <= 0:
+                    qtd_tesouro = 0
+                
+                mochila['tesouro'].treasure_amount = qtd_tesouro 
+
+                
+                
 
             #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
             print("\nCABEÇALHO............................................")
             print("vertice atual: ", id_vertice_atual)
             print("cor vertice atual: ", lista_adjacencias[id_vertice_atual][0])
+            print("Quantidade tesouro: ", qtd_tesouro)
             print("pilha: ", pilha)
             print("progresso_pilha: ", progresso_pilha)
 
@@ -187,21 +212,13 @@ while running:
             #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO DETERMINA_PROXIMO_VERTICE)
 
 
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
-            '''current_vertex = player.current_vertex
-            current_vertex_id_vertices_pos = vertices_pos.index(current_vertex) + 1
-
-            current_vertex_id_caminho_gerado = caminho_gerado.index(current_vertex_id_vertices_pos)
-            target_vertex_id_caminho_gerado = current_vertex_id_caminho_gerado + 1
-            target_vertex = caminho_gerado[target_vertex_id_caminho_gerado]'''
-            #CÁLCULO DO PRÓXIMO VÉRTICE A SER SEGUIDO NO CAMINHO (USANDO FUNÇÃO GENERATE_PATH)
-
-
             #VERIFICANDO SE PLAYER MORREU E SE TEM CHECKPOINT
             if (player.health <= 0):
                 if ultimo_checkpoint > 0:
                     pilha = copy.deepcopy(progresso_pilha)
                     lista_adjacencias = copy.deepcopy(progresso_lista_adjacencias)
+                    if 'tesouro' in mochila:
+                        mochila['tesouro'].treasure_amount = progresso_tesouro
                     target_vertex = ultimo_checkpoint
                     calculo_proximo_vertice = 1
                     mochila.pop('mapa', "Não há mapa na mochila!")   
@@ -218,7 +235,6 @@ while running:
 
     screen.fill((0, 0, 0))
     screen.blit(background_image, (0, 0))
-    screen.blit(player.image, player.rect.topleft)
 
 
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO
@@ -251,17 +267,34 @@ while running:
     #GENERATE PATH
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
 
+    screen.blit(player.image, player.rect.topleft)
+
     menu_icon = pygame.image.load('Assets/menu_lateral.jpg')
     menu_icon = pygame.transform.scale(menu_icon, (400, 600))
     screen.blit(menu_icon, (800,0))
 
+    if 0 <= hora <= 35:
+        pass
+        hora_icon = pygame.image.load('Assets/sol icone.png')
+    elif 36 <= hora <= 70:
+        pass
+        hora_icon = pygame.image.load('Assets/meio sol icone.png')
+    elif 70 <= hora:
+        pass
+        hora_icon = pygame.image.load('Assets/lua icone.png')
+    hora_icon = pygame.transform.scale(hora_icon, (100, 100))
+    screen.blit(hora_icon, (950, 100))
+
     font = pygame.font.Font(None, 26)
     draw_health_bar(screen, 840, 400, 200, 20, player.health, 100)
+    draw_treasure_bar(screen, 840, 370, 200, 20, qtd_tesouro, 100)
     health_text = font.render(f"Vida: {player.health}", True, (0, 0, 0))
     attack_text = font.render(f"Ataque: {player.attack}", True, (0, 0, 0))
+    treasure_text = font.render(f"Tesouro: {qtd_tesouro}", True, (0, 0, 0))
 
+    screen.blit(treasure_text, (840, 372))
     screen.blit(health_text, (840, 402))
-    screen.blit(attack_text, (980, 530))
+    screen.blit(attack_text, (840, 342))
     player_icon = pygame.image.load('Assets/frerp.png')
     player_icon = pygame.transform.scale(player_icon, (190, 190))
     screen.blit(player_icon,(800,400))

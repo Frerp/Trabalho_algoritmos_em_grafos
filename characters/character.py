@@ -5,23 +5,25 @@ import random
 from characters.enemy import Enemy
 from characters.heal import Heal
 from characters.weapon import Weapon
+from characters.treasure import Treasure
 
 clock = pygame.time.Clock()
 
 class Character:
     def __init__(self, image_path, initial_vertex, index_initial_vertex, health, attack):
         self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (80, 80))
+        self.image = pygame.transform.scale(self.image, (100, 100))
         self.rect = self.image.get_rect()
-        self.rect.center = initial_vertex
+        self.rect.center = (initial_vertex[0] + 20, initial_vertex[1] - 20)
         self.current_vertex = initial_vertex
         self.index_current_vertex = index_initial_vertex
         self.health = health
         self.attack = attack
         self.bullets = 0
+        self.time = 0
 
     def move_to_vertex(self, target_vertex, index_target_vertex):
-        self.rect.center = target_vertex
+        self.rect.center = (target_vertex[0] + 20, target_vertex[1] - 20)
         self.previous_vertex = self.current_vertex
         self.current_vertex = target_vertex
 
@@ -29,6 +31,8 @@ class Character:
 
     def take_damage(self, damage):
         self.health -= damage
+        if self.health <= 0:
+            self.health = 0
 
     def attack_enemy(self, enemy):
         enemy.take_damage(self.attack)
@@ -42,19 +46,30 @@ class Character:
         combat_screen = pygame.display.set_mode((1200, 600))
         pygame.display.set_caption("Combate")
 
+        #carregar imagem background
+        if 0 <= self.time <= 35:
+            background_image = pygame.image.load("Assets/background_manha.jpeg")
+        elif 36 <= self.time <= 70:
+            background_image = pygame.image.load("Assets/background tarde.jpeg")
+        elif 71 <= self.time:   
+            background_image = pygame.image.load("Assets/background noite.jpeg")
+
         # Carregar imagens do jogador e do inimigo
-        player_image = pygame.image.load('Assets/frerp.png')
+        player_image = pygame.image.load("Assets/frerp.png")
         enemy_image = pygame.image.load(enemy.image_path)
 
         # Redimensionar imagens
         player_image = pygame.transform.scale(player_image, (150, 150))
         enemy_image = pygame.transform.scale(enemy_image, (150, 150))
+        background_image = pygame.transform.scale(background_image, (1200, 600))
 
         # Definir posição inicial das imagens
         player_rect = player_image.get_rect(center=(200, 300))
         enemy_rect = enemy_image.get_rect(center=(600, 300))
+        background_rect = background_image.get_rect(center=(600, 300))
 
         # Exibir imagens na tela de combate
+        combat_screen.blit(background_image, background_rect)
         combat_screen.blit(player_image, player_rect)
         combat_screen.blit(enemy_image, enemy_rect)
         pygame.display.flip()
@@ -67,6 +82,7 @@ class Character:
             move_offset = (move_vector[0] * i / 25, move_vector[1] * i / 25)
             player_position = (start_position[0] + move_offset[0], start_position[1] + move_offset[1])
             combat_screen.fill((0, 0, 0))  # Limpar tela
+            combat_screen.blit(background_image, background_rect)
             combat_screen.blit(player_image, player_position)
             combat_screen.blit(enemy_image, enemy_rect.center)
             pygame.display.flip()
@@ -105,7 +121,8 @@ class Character:
 
                     enemy_damage = random.randint(1, enemy.attack)
                     print(f"{enemy.name} atacou você e causou {enemy_damage} de dano!")
-                    self.health -= enemy_damage
+                    self.take_damage(enemy_damage)
+
 
                     if self.health <= 0:
                         print("Você foi derrotado!")
@@ -214,11 +231,10 @@ class Character:
             if choice:
                 if choice == "Pegar o mapa":
                     print("Você pegou o mapa")
-                    caminho_tesouro = map.generate_path(self.index_current_vertex)
-                    return caminho_tesouro
+                    return 'Peguei o mapa'
                 elif choice == "Deixar o mapa":
                     print("Você deixou o mapa para trás.")
-                return []
+                    return 'Deixei o mapa'
 
     def handle_checkpoint_event(self, checkpoint, screen):
         print("Você chegou a um checkpoint!")
@@ -242,6 +258,10 @@ class Character:
             if choice:
                 return        
 
+    def handle_treasure_event(self, event_object, screen):
+        treasure_object = Treasure('tesouro', 100)
+        return treasure_object
+
     def handle_event(self, event_object, screen):
         if event_object.type == 'inimigo':
             resultado = self.handle_enemy_event(event_object, screen)
@@ -260,8 +280,8 @@ class Character:
         elif event_object.type == 'checkpoint':
             self.handle_checkpoint_event(event_object, screen)
         elif event_object.type == 'tesouro':
-            pass
-            #self.hande_treasure_event(event_object, screen)
+            resposta = self.handle_treasure_event(event_object, screen)
+            return resposta
 
     def render_buttons(self, screen, buttons):
         for button in buttons:
