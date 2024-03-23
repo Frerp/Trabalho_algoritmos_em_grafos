@@ -3,6 +3,8 @@ import sys
 from gui.buttons import Button
 import random
 from characters.enemy import Enemy
+from characters.heal import Heal
+from characters.weapon import Weapon
 
 clock = pygame.time.Clock()
 
@@ -16,7 +18,7 @@ class Character:
         self.index_current_vertex = index_initial_vertex
         self.health = health
         self.attack = attack
-        #self.enemies = []
+        self.bullets = 0
 
     def move_to_vertex(self, target_vertex, index_target_vertex):
         self.rect.center = target_vertex
@@ -93,7 +95,10 @@ class Character:
                     player_damage = random.randint(1, self.attack)
                     print(f"Você atacou o {enemy.name} e causou {player_damage} de dano!")
                     enemy.health -= player_damage
-
+                    if self.attack > 21 :
+                        self.bullets -= 1
+                        if self.bullets <= 0:
+                            self.attack = 20
                     if enemy.health <= 0:
                         print(f"Você derrotou o {enemy.name}!")
                         return "inimigo morreu"
@@ -110,6 +115,8 @@ class Character:
                     pygame.display.flip()
 
                 elif choice == "Fugir":
+                    enemy_damage = random.randint(1, enemy.attack)
+                    self.health -= enemy_damage
                     print("Você escolheu fugir!")
                     return
 
@@ -139,8 +146,11 @@ class Character:
             choice = self.check_button_click(buttons, mouse_pos, mouse_click)
             if choice:
                 if choice == "Usar a cura":
-                    self.health += 20
+                    self.health += heal.healing_points
+                    if self.health >= 100 :
+                        self.health = 100
                     print("Você usou a cura e recuperou pontos de vida!")
+                    return "cura usada"
                 elif choice == "Ignorar":
                     print("Você ignorou a cura.")
                 return
@@ -170,7 +180,10 @@ class Character:
             choice = self.check_button_click(buttons, mouse_pos, mouse_click)
             if choice:
                 if choice == "Pegar a arma":
+                    self.attack = 20 + weapon.damage
+                    self.bullets = weapon.bullets
                     print("Você pegou a nova arma.")
+                    return "arma usada"
                 elif choice == "Deixar a arma":
                     print("Você deixou a arma para trás.")
                 return
@@ -234,12 +247,13 @@ class Character:
             resultado = self.handle_enemy_event(event_object, screen)
             return resultado
         elif event_object.type == 'cura':
-            self.handle_healing_event(event_object, screen)
+            resultado =  self.handle_healing_event(event_object, screen)
+            return resultado
         elif event_object.type == 'arma':
-            self.handle_weapon_event(event_object, screen)
+            resultado =  self.handle_weapon_event(event_object, screen)
+            return resultado
         elif event_object.type == 'terreno':
-            pass
-            #self.handle
+            self.handle_weapon_event(event_object, screen)
         elif event_object.type == 'map':
             pass
             #resultado = self.handle_map_event(event_object, screen)

@@ -68,23 +68,27 @@ def generate_events(graph, beachpoints, checkpoints, treasurepoints):
             if (dicionario_eventos[vertice] == None) and (vertice not in lista_vertices_seguros):
                 break
 
-        nomeInimigo = random.choice(['Pantera Mística', 'Leão de Nemeia', 'Formigas Quimera', 'Cobra Gigante'])
-        if(nomeInimigo == 'Pantera Mística'):
-            image_path = 'Assets/pantera.jpeg'
+        nomeInimigo = random.choice(['onça', 'Floresta viva', 'Meruem', 'Cobra Gigante','Ze Jacare'])
+        if(nomeInimigo == 'onça'):
+            image_path = 'Assets/onça.png'
             attack = 15
             health = 50
-        elif (nomeInimigo == 'Leão de Nemeia'):
-            image_path = 'Assets/leao.jpeg'
+        elif (nomeInimigo == 'Floresta viva'):
+            image_path = 'Assets/florestal.png'
             attack = 12
             health = 60
-        elif (nomeInimigo == 'Formigas Quimera'):
-            image_path = 'Assets/formiga.jpeg'
+        elif (nomeInimigo == 'Meruem'):
+            image_path = 'Assets/formiga quimera.png'
             attack = 30
             health = 70
         elif (nomeInimigo == 'Cobra Gigante'):
-            image_path = 'Assets/cobra.jpeg'
+            image_path = 'Assets/cobra.png'
             attack = 20
             health = 65
+        elif (nomeInimigo == 'Ze Jacare'):
+            image_path = 'Assets/Ze_Jacare.png'
+            attack = 8
+            health = 80
         objeto = Enemy('inimigo', nomeInimigo, attack, health, image_path)
 
         dicionario_eventos[vertice] = objeto
