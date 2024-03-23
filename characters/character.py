@@ -260,7 +260,8 @@ class Character:
         elif event_object.type == 'checkpoint':
             self.handle_checkpoint_event(event_object, screen)
         elif event_object.type == 'tesouro':
-            self.hande_treasure_event(event_object, screen)
+            pass
+            #self.hande_treasure_event(event_object, screen)
 
     def render_buttons(self, screen, buttons):
         for button in buttons:
