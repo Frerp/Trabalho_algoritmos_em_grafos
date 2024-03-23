@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import copy
+from characters.weapon import Weapon
 from characters.character import Character
 from characters.enemy import Enemy
 from characters.checkpoint import Checkpoint
@@ -91,21 +92,26 @@ calculo_proximo_vertice = 1
 
 while running:
     for event in pygame.event.get():
+        
+        #DETERMINA ID DO VÉRTICE ATUAL
+        vertice_atual = player.current_vertex
+        id_vertice_atual = vertices_pos.index(vertice_atual) + 1
+        
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+            if player.attack>= 21:  
+                event_object_type = Weapon('arma',player.attack-20,player.bullets)
+                eventos_por_vertice[id_vertice_atual]= event_object_type
+                player.attack = 20
+                player.bullets = 0
+            
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 
-
-            #DETERMINA ID DO VÉRTICE ATUAL
-            vertice_atual = player.current_vertex
-            id_vertice_atual = vertices_pos.index(vertice_atual) + 1
             print("vertice atual: ", id_vertice_atual)
-            #DETERMINA ID DO VÉRTICE ATUAL
-
 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
             event_object_type = eventos_por_vertice.get(id_vertice_atual, None)
-
             if event_object_type:
                 event_description = (event_object_type.type)
                 print(event_description)
@@ -114,13 +120,17 @@ while running:
                     resposta = player.handle_event(event_object_type, screen)
                     if resposta == 'inimigo morreu':
                         eventos_por_vertice[id_vertice_atual] = None
-
-                elif 'cura' in event_object_type.type or 'arma' in event_object_type.type:
-                    player.handle_event(event_object_type, screen)
-  
+                elif 'cura' in event_object_type.type:
+                    resposta =player.handle_event(event_object_type, screen)
+                    if resposta == 'cura usada':
+                        eventos_por_vertice[id_vertice_atual] = None
+                elif'arma' in event_object_type.type: 
+                    resposta = player.handle_event(event_object_type, screen)
+                    if resposta == 'arma usada':
+                        eventos_por_vertice[id_vertice_atual] = None
                 elif 'terreno' in event_object_type.type:
                     damage = event_object_type.damage
-                    print(f"Você sofreu {damage} de dano devido ao evento.")
+                    print(f"Você sofreu {damage} de dano devido ao evento.")   
                     player.take_damage(damage)
                     print(f"Sua vida atual: {player.health}")
 
