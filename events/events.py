@@ -140,13 +140,13 @@ def generate_events(graph, beachpoints, checkpoints, treasurepoints):
     dicionario_eventos[vertice_tesouro] = objeto
 
     #gerando mapas
-    for i in range(2):
+    for i in range(1):
         while True:
             vertice = random.randint(1, 50)
             if (dicionario_eventos[vertice] ==  None) and (vertice not in lista_vertices_seguros):
                 break
         
-        objeto = Map('map', graph, vertice_tesouro)
+        objeto = Map('mapa', graph, vertice_tesouro)
         dicionario_eventos[vertice] = objeto
 
     return dicionario_eventos

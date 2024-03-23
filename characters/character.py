@@ -16,7 +16,6 @@ class Character:
         self.index_current_vertex = index_initial_vertex
         self.health = health
         self.attack = attack
-        #self.enemies = []
 
     def move_to_vertex(self, target_vertex, index_target_vertex):
         self.rect.center = target_vertex
@@ -201,11 +200,11 @@ class Character:
             if choice:
                 if choice == "Pegar o mapa":
                     print("Você pegou o mapa")
-                    #caminho_tesouro = map.generate_path(self.index_current_vertex)
-                    #return caminho_tesouro
+                    caminho_tesouro = map.generate_path(self.index_current_vertex)
+                    return caminho_tesouro
                 elif choice == "Deixar o mapa":
                     print("Você deixou o mapa para trás.")
-                return
+                return []
 
     def handle_checkpoint_event(self, checkpoint, screen):
         print("Você chegou a um checkpoint!")
@@ -240,12 +239,13 @@ class Character:
         elif event_object.type == 'terreno':
             pass
             #self.handle
-        elif event_object.type == 'map':
-            pass
-            #resultado = self.handle_map_event(event_object, screen)
-            #return resultado
+        elif event_object.type == 'mapa':
+            resultado = self.handle_map_event(event_object, screen)
+            return resultado
         elif event_object.type == 'checkpoint':
             self.handle_checkpoint_event(event_object, screen)
+        elif event_object.type == 'tesouro':
+            self.hande_treasure_event(event_object, screen)
 
     def render_buttons(self, screen, buttons):
         for button in buttons:

@@ -40,6 +40,7 @@ vertices_checkpoints = [19, 28, 36]
 
 #INICIALIZANOD PILHA E CAMINHO GERADO COM BUSCA EM LARGURA
 pilha = []
+caminho_do_mapa = []
 caminho_gerado = generate_path(lista_adjacencias, index_vertice_inicial, index_vertice_destino)
 #INICIALIZANOD PILHA E CAMINHO GERADO COM BUSCA EM LARGURA
 
@@ -49,6 +50,11 @@ progresso_pilha = []
 progresso_lista_adjacencias = {}
 ultimo_checkpoint = 0
 #INICIALIZANDO PROGRESSO DO JOG
+
+
+#TESOURO
+mochila = {}
+#TESOURO
 
 
 eventos_por_vertice = {}
@@ -118,11 +124,18 @@ while running:
                     player.take_damage(damage)
                     print(f"Sua vida atual: {player.health}")
 
-                elif 'map' in event_object_type.type:
-                    pass
-                    #resposta = player.handle_event(event_object_type, screen)
-                    #if isinstance(resposta, list):
-                    #    calculo_proximo_vertice = 2
+                elif 'mapa' in event_object_type.type:
+                    mochila['mapa'] = event_object_type 
+
+                    if 'tesouro' in mochila:
+                        mochila['mapa'].destiny = index_vertice_inicial
+
+                    map = mochila['mapa']
+
+                    caminho_do_mapa = player.handle_event(map, screen)
+                    eventos_por_vertice[id_vertice_atual] = None
+                    if len(caminho_do_mapa) > 0:
+                        calculo_proximo_vertice = 2
 
                 elif 'checkpoint' in event_object_type.type:
                     print('Eu entrei no checkpoint')
@@ -132,6 +145,14 @@ while running:
                     eventos_por_vertice[id_vertice_atual] = None
                     player.handle_event(event_object_type, screen)
                     del event_object_type
+
+                elif 'tesouro' in event_object_type.type:
+                    tesouro = event_object_type
+                    mochila['tesouro'] = tesouro
+                    
+                    if 'mapa' in mochila:
+                        mochila['mapa'].destiny = index_vertice_inicial
+                        caminho_do_mapa = mochila['mapa'].generate_path(id_vertice_atual) 
             #LIDANDO COM EVENTO DO VÉRTICE ATUAL
                     
 
@@ -141,8 +162,15 @@ while running:
             print("cor vertice atual: ", lista_adjacencias[id_vertice_atual][0])
             print("pilha: ", pilha)
             print("progresso_pilha: ", progresso_pilha)
-            lista_adjacencias, proximo_vertice, pilha = determina_proximo_vertice(lista_adjacencias, id_vertice_atual, pilha)
-            target_vertex = proximo_vertice
+
+            if calculo_proximo_vertice == 1:
+                lista_adjacencias, proximo_vertice, pilha = determina_proximo_vertice(lista_adjacencias, id_vertice_atual, pilha)
+                target_vertex = proximo_vertice
+            elif calculo_proximo_vertice == 2:
+                posicao_vertice_atual_mapa = caminho_do_mapa.index(id_vertice_atual)
+                posicao_target_vertex_caminho_mapa = posicao_vertice_atual_mapa + 1
+                if posicao_target_vertex_caminho_mapa < len(caminho_do_mapa):
+                    target_vertex = caminho_do_mapa[posicao_target_vertex_caminho_mapa]
 
             if (target_vertex == -1):
                 running = False
@@ -165,6 +193,8 @@ while running:
                     pilha = copy.deepcopy(progresso_pilha)
                     lista_adjacencias = copy.deepcopy(progresso_lista_adjacencias)
                     target_vertex = ultimo_checkpoint
+                    calculo_proximo_vertice = 1
+                    mochila.pop('mapa', "Não há mapa na mochila!")   
                     ultimo_checkpoint = 0
                     player.health = 100
                 else:
@@ -200,13 +230,14 @@ while running:
         screen.blit(indice_vertice, (coordenada[0] + 10, coordenada[1] - 5))
     
     #GENERATE PATH
-    '''tamanho_caminho = len(caminho_gerado)
-    for index in range(tamanho_caminho - 1):
-        x = caminho_gerado[index]
-        y = caminho_gerado[index + 1]
-        pygame.draw.line(screen, (0, 255, 0), vertices_pos[x - 1], vertices_pos[y - 1], 2)
-        pygame.draw.circle(screen, (0, 255, 0), vertices_pos[x - 1], 10)
-        pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)'''
+    if len(caminho_do_mapa):
+        tamanho_caminho = len(caminho_do_mapa)
+        for index in range(tamanho_caminho - 1):
+            x = caminho_do_mapa[index]
+            y = caminho_do_mapa[index + 1]
+            pygame.draw.line(screen, (0, 255, 0), vertices_pos[x - 1], vertices_pos[y - 1], 2)
+            pygame.draw.circle(screen, (0, 255, 0), vertices_pos[x - 1], 10)
+            pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)
     #GENERATE PATH
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
 
