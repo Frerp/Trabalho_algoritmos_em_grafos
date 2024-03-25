@@ -380,7 +380,7 @@ while running:
     player_icon = pygame.image.load('Assets/Anderson.png')
     player_icon = pygame.transform.scale(player_icon, (150, 150))
     screen.blit(player_icon,(850,150))
-    descricao_personagem = pygame.image.load('Assets/Descrição_Personagem_1.5[].png')
+    descricao_personagem = pygame.image.load('Assets/Descrição_Personagem_1.5.png')
     descricao_personagem = pygame.transform.scale(descricao_personagem, (330, 170))
     screen.blit(descricao_personagem, (830, 350))
     pygame.display.flip()
