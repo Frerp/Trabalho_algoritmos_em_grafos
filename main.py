@@ -64,7 +64,7 @@ eventos_por_vertice = generate_events(lista_adjacencias, vertices_inicio, vertic
 
 
 vertice_inicial = vertices_pos[index_vertice_inicial  - 1] 
-player = Character('Assets/frerp.png', vertice_inicial, index_vertice_inicial, health=100, attack=20)
+player = Character(vertice_inicial, index_vertice_inicial, health=100, attack=20)
 
 
 menu_surface = pygame.Surface((MENU_WIDTH, HEIGHT))
@@ -266,7 +266,8 @@ while running:
             pygame.draw.circle(screen, (0, 255, 0), vertices_pos[y - 1], 10)
     #GENERATE PATH
     #PRINTANDO GRAFO NA TELA PARA AJUDAR VISUALIZAÇÃO    
-
+            
+    player.update_sprite()
     screen.blit(player.image, player.rect.topleft)
 
     menu_icon = pygame.image.load('Assets/menu_lateral.jpg')
@@ -295,9 +296,9 @@ while running:
     screen.blit(treasure_text, (840, 372))
     screen.blit(health_text, (840, 402))
     screen.blit(attack_text, (840, 342))
-    player_icon = pygame.image.load('Assets/frerp.png')
-    player_icon = pygame.transform.scale(player_icon, (190, 190))
-    screen.blit(player_icon,(800,400))
+    player_icon = pygame.image.load('Assets/Anderson.png')
+    player_icon = pygame.transform.scale(player_icon, (150, 150))
+    screen.blit(player_icon,(820,420))
 
     pygame.display.flip()
     clock.tick(30)

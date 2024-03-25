@@ -10,20 +10,34 @@ from characters.treasure import Treasure
 clock = pygame.time.Clock()
 
 class Character:
-    def __init__(self, image_path, initial_vertex, index_initial_vertex, health, attack):
-        self.image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(self.image, (100, 100))
+    def __init__(self, initial_vertex, index_initial_vertex, health, attack):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Animacao_Personagem/Personagem_Animação_1.png'))
+        self.sprites.append(pygame.image.load('Animacao_Personagem/Personagem_Animação_2.png'))
+        self.sprites.append(pygame.image.load('Animacao_Personagem/Personagem_Animação_3.png'))
+        self.sprites.append(pygame.image.load('Animacao_Personagem/Personagem_Animação_4.png'))
+        self.sprites.append(pygame.image.load('Animacao_Personagem/Personagem_Animação_5.png'))
+        self.current_sprite = 0
+        self.image = self.sprites[self.current_sprite]
+        self.image = pygame.transform.scale(self.image, (120, 120))
         self.rect = self.image.get_rect()
-        self.rect.center = (initial_vertex[0] + 20, initial_vertex[1] - 20)
+        self.rect.center = (initial_vertex[0] + 30, initial_vertex[1] - 30)
         self.current_vertex = initial_vertex
         self.index_current_vertex = index_initial_vertex
         self.health = health
         self.attack = attack
         self.bullets = 0
         self.time = 0
+        
+    def update_sprite(self):
+        self.current_sprite += 0.3
+        if self.current_sprite >= len(self.sprites):
+            self.current_sprite = 0
+        self.image = self.sprites[int(self.current_sprite)]
+        self.image = pygame.transform.scale(self.image, (120, 120))
 
     def move_to_vertex(self, target_vertex, index_target_vertex):
-        self.rect.center = (target_vertex[0] + 20, target_vertex[1] - 20)
+        self.rect.center = (target_vertex[0] + 30, target_vertex[1] - 30)
         self.previous_vertex = self.current_vertex
         self.current_vertex = target_vertex
 
@@ -55,7 +69,7 @@ class Character:
             background_image = pygame.image.load("Assets/background noite.jpeg")
 
         # Carregar imagens do jogador e do inimigo
-        player_image = pygame.image.load("Assets/frerp.png")
+        player_image = pygame.image.load("Assets/Anderson.png")
         enemy_image = pygame.image.load(enemy.image_path)
 
         # Redimensionar imagens
