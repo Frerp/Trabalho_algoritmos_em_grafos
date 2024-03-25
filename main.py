@@ -87,6 +87,36 @@ def draw_treasure_bar(surface, x, y, width, height, treasure_points, max_treasur
     pygame.draw.rect(surface, (255, 255, 0), fill_rect)
     pygame.draw.rect(surface, (0, 0, 0), outline_rect,2)
 
+def criar_novo_inimigo():
+    vertice_novo_inimigo = random.randint(1, 50)
+    while eventos_por_vertice[vertice_novo_inimigo] != None:
+        vertice_novo_inimigo = random.randint(1, 50)
+
+    nomeInimigo = random.choice(['onça', 'Floresta viva', 'Meruem', 'Cobra Gigante','Ze Jacare'])
+    if(nomeInimigo == 'onça'):
+        image_path = 'Assets/onça.png'
+        attack = 15
+        health = 50
+    elif (nomeInimigo == 'Floresta viva'):
+        image_path = 'Assets/florestal.png'
+        attack = 12
+        health = 60
+    elif (nomeInimigo == 'Meruem'):
+        image_path = 'Assets/formiga quimera.png'
+        attack = 30
+        health = 70
+    elif (nomeInimigo == 'Cobra Gigante'):
+        image_path = 'Assets/cobra.png'
+        attack = 20
+        health = 65
+    elif (nomeInimigo == 'Ze Jacare'):
+        image_path = 'Assets/Crocodilo_gigante.png'
+        attack = 8
+        health = 80
+    objeto = Enemy('inimigo', nomeInimigo, attack, health, image_path)
+
+    eventos_por_vertice[vertice_novo_inimigo] = objeto
+
 calculo_proximo_vertice = 1
 
 while running:
@@ -111,6 +141,38 @@ while running:
                 player.bullets = 0
             
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+ 
+
+            for vertice_atual_inimigo in lista_adjacencias:
+                if eventos_por_vertice[vertice_atual_inimigo] != None:
+                    if eventos_por_vertice[vertice_atual_inimigo].type == 'inimigo':
+                        for vertice_vizinho in lista_adjacencias[vertice_atual_inimigo][2]:
+                            target_vertice_inimigo = vertice_vizinho
+                            if (eventos_por_vertice[target_vertice_inimigo] == None):
+                                eventos_por_vertice[target_vertice_inimigo] = eventos_por_vertice[vertice_atual_inimigo]
+                                eventos_por_vertice[vertice_atual_inimigo] = None
+                                break
+                            elif (eventos_por_vertice[target_vertice_inimigo].type == 'inimigo'):
+                                attack1 = eventos_por_vertice[target_vertice_inimigo].attack
+                                attack2 = eventos_por_vertice[vertice_atual_inimigo].attack
+                                if attack1 >= attack2:
+                                    pass
+                                    eventos_por_vertice[vertice_atual_inimigo] = None
+                                    eventos_por_vertice[target_vertice_inimigo].health -= attack2
+                                    if eventos_por_vertice[target_vertice_inimigo].health <= 0:
+                                        eventos_por_vertice[target_vertice_inimigo] = None
+                                        criar_novo_inimigo()
+                                else:
+                                    pass
+                                    eventos_por_vertice[target_vertice_inimigo] = None
+                                    eventos_por_vertice[vertice_atual_inimigo].health -= attack1
+                                    if eventos_por_vertice[vertice_atual_inimigo].health <= 0:
+                                        eventos_por_vertice[vertice_atual_inimigo] = None
+                                        criar_novo_inimigo()
+                                break
+                            else:
+                                continue
+
 
             hora += 1
             player.time = hora 
@@ -124,10 +186,10 @@ while running:
 
                 if 'inimigo' in event_object_type.type:
                     resposta = player.handle_event(event_object_type, screen)
-                    if resposta == 'inimigo morreu':
+                    if resposta == 'inimigo morreu':    
                         eventos_por_vertice[id_vertice_atual] = None
                 elif 'cura' in event_object_type.type:
-                    resposta =player.handle_event(event_object_type, screen)
+                    resposta = player.handle_event(event_object_type, screen)
                     if resposta == 'cura usada':
                         eventos_por_vertice[id_vertice_atual] = None
                 elif'arma' in event_object_type.type: 
@@ -284,22 +346,43 @@ while running:
         pass
         hora_icon = pygame.image.load('Assets/lua icone.png')
     hora_icon = pygame.transform.scale(hora_icon, (100, 100))
-    screen.blit(hora_icon, (950, 100))
+    screen.blit(hora_icon, (950, 30))
 
     font = pygame.font.Font(None, 26)
-    draw_health_bar(screen, 840, 400, 200, 20, player.health, 100)
-    draw_treasure_bar(screen, 840, 370, 200, 20, qtd_tesouro, 100)
+    hora_text = font.render(f"Tempo passado: {hora}", True, (0, 0, 0))
+    draw_health_bar(screen, 840, 300, 200, 20, player.health, 100)
+    draw_treasure_bar(screen, 840, 330, 200, 20, qtd_tesouro, 100)
     health_text = font.render(f"Vida: {player.health}", True, (0, 0, 0))
-    attack_text = font.render(f"Ataque: {player.attack}", True, (0, 0, 0))
     treasure_text = font.render(f"Tesouro: {qtd_tesouro}", True, (0, 0, 0))
+    attack_text = font.render(f"Ataque: {player.attack}", True, (0, 0, 0))
+    bullets_text = font.render(f"Balas: {player.bullets}", True, (0, 0, 0,))
+    backpack_text = font.render("Mochila", True, (0, 0, 0))
+    map_text = font.render("- Mapa", True, (0, 0, 0))
+    weapon_text = font.render("- Arma:", True, (0, 0, 0))
+    weapon_text_2 = font.render("  Pressione 'F'", True, (0, 0, 0))
+    weapon_text_3 = font.render("  para largar a", True, (0, 0, 0))
+    weapon_text_4 = font.render("  arma", True, (0, 0, 0))
 
-    screen.blit(treasure_text, (840, 372))
-    screen.blit(health_text, (840, 402))
-    screen.blit(attack_text, (840, 342))
+
+    screen.blit(backpack_text, (1040, 170))
+    if 'mapa' in mochila:
+        screen.blit(map_text, (1040, 195))
+    if player.attack >= 21:
+        screen.blit(weapon_text, (1040, 215))
+        screen.blit(weapon_text_2, (1040, 230))
+        screen.blit(weapon_text_3, (1040, 245))
+        screen.blit(weapon_text_4, (1040, 260))
+    screen.blit(hora_text, (930, 140))
+    screen.blit(treasure_text, (840, 332)) 
+    screen.blit(health_text, (840, 302))
+    screen.blit(attack_text, (1050, 302))
+    screen.blit(bullets_text, (1050, 332))
     player_icon = pygame.image.load('Assets/Anderson.png')
     player_icon = pygame.transform.scale(player_icon, (150, 150))
-    screen.blit(player_icon,(820,420))
-
+    screen.blit(player_icon,(850,150))
+    descricao_personagem = pygame.image.load('Assets/Descrição_Personagem.png')
+    descricao_personagem = pygame.transform.scale(descricao_personagem, (330, 170))
+    screen.blit(descricao_personagem, (830, 350))
     pygame.display.flip()
     clock.tick(30)
 

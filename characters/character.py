@@ -30,7 +30,7 @@ class Character:
         self.time = 0
         
     def update_sprite(self):
-        self.current_sprite += 0.3
+        self.current_sprite += 1
         if self.current_sprite >= len(self.sprites):
             self.current_sprite = 0
         self.image = self.sprites[int(self.current_sprite)]
@@ -90,7 +90,7 @@ class Character:
 
         # Animação da aproximação do jogador em direção ao inimigo
         start_position = player_rect.center
-        end_position = (enemy_rect.center[0] - 100, enemy_rect.center[1])  # Move o jogador um pouco para a esquerda
+        end_position = (enemy_rect.center[0] - 130, enemy_rect.center[1])  # Move o jogador um pouco para a esquerda
         move_vector = (end_position[0] - start_position[0], end_position[1] - start_position[1])
         for i in range(25):
             move_offset = (move_vector[0] * i / 25, move_vector[1] * i / 25)
@@ -103,7 +103,7 @@ class Character:
             clock.tick(60)
 
         # Exibir botões de ação
-        buttons = [Button("Lutar", (200, 500), (200, 50)), Button("Fugir", (400, 500), (200, 50))]
+        buttons = [Button("Lutar", (390, 470), (200, 80), 'Assets/Combat_Button.png'), Button("Fugir", (620, 470), (200, 80), 'Assets/Run_button.png')]
         for button in buttons:
             button.draw(combat_screen)
         pygame.display.flip()
@@ -158,8 +158,8 @@ class Character:
         print("1. Usar a cura")
         print("2. Ignorar")
 
-        buttons = [Button("Usar a cura", (920, 200), (300, 50)),
-                   Button("Ignorar", (920, 260), (300, 50))]
+        buttons = [Button("Usar a cura", (840, 475), (160, 70), 'Assets/Take_heal_button.png'),
+                   Button("Ignorar", (1005, 475), (160, 70), 'Assets/Leave_heal_button.png')]
 
         while True:
             for event in pygame.event.get():
@@ -192,8 +192,8 @@ class Character:
         print("1. Pegar a arma e trocar pela atual")
         print("2. Deixar a arma")
 
-        buttons = [Button("Pegar a arma", (920, 200), (300, 50)),
-                   Button("Deixar a arma", (920, 260), (300, 50))]
+        buttons = [Button("Pegar a arma", (840, 475), (160, 70), 'Assets/Take_weapon_button.png'),
+                   Button("Deixar a arma",  (1005, 475), (160, 70), 'Assets/Leave_weapon_button.png')]
 
         while True:
             for event in pygame.event.get():
@@ -225,8 +225,8 @@ class Character:
         print("1. Pegar o mapa!")
         print("2. Deixar o mapa.")
 
-        buttons = [Button("Pegar o mapa", (920, 200), (300, 50)),
-                   Button("Deixar o mapa", (920, 260), (300, 50))]
+        buttons = [Button("Pegar o mapa", (840, 475), (160, 70), 'Assets/Take_map_button.png'),
+                   Button("Deixar o mapa",  (1005, 475), (160, 70), 'Assets/Leave_map_button.png')]
 
         while True:
             for event in pygame.event.get():
@@ -253,7 +253,7 @@ class Character:
     def handle_checkpoint_event(self, checkpoint, screen):
         print("Você chegou a um checkpoint!")
 
-        buttons = [Button("OK!", (920, 200), (300, 50))]
+        buttons = [Button("OK!", (900, 475), (200, 75), 'Assets/Checkpoint_button.png')]
 
         while True:
             for event in pygame.event.get():

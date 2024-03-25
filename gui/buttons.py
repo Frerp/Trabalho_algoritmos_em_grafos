@@ -2,19 +2,19 @@
 import pygame
 
 class Button:
-    def __init__(self, label, position, size):
+    def __init__(self, label, position, size, image_path):
         self.label = label
         self.position = position
+        self.image = pygame.image.load(image_path)
+        self.image = pygame.transform.scale(self.image, size)
         self.size = size
         self.rect = pygame.Rect(self.position, self.size)
         self.clicked = False
-        self.font = pygame.font.Font(None, 36)
+        #self.font = pygame.font.Font(None, 36)
 
-    def draw(self, surface):
-        pygame.draw.rect(surface, (255, 0, 0), self.rect)
-        text = self.font.render(self.label, True, (255, 255, 255))
-        text_rect = text.get_rect(center=self.rect.center)
-        surface.blit(text, text_rect)
+    def draw(self, screen):
+        screen.blit(self.image, self.position)
+
 
     def update(self, mouse_pos, mouse_click):
         if self.rect.collidepoint(mouse_pos):
